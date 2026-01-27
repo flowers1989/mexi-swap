@@ -13,4 +13,4 @@ Estructura principal:
 - `client/`: frontend (Vite + React + TypeScript)
 - `contracts/`: contratos Solidity
 
-Contacto: Jorge
+Contacto: Rex-Flowers
