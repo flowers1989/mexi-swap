@@ -160,7 +160,6 @@ export function isLegitimeDomain(): boolean {
     "localhost",
     "mexiswap.io",
     "app.mexiswap.io",
-    "manus.computer", // Desarrollo
   ];
   
   const currentHost = window.location.hostname;
