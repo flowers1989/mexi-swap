@@ -23,7 +23,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import "./PythPriceOracle.sol";
 
 contract MexiPerpetuals is ReentrancyGuard, Pausable, AccessControl {
     using SafeMath for uint256;
@@ -34,6 +34,7 @@ contract MexiPerpetuals is ReentrancyGuard, Pausable, AccessControl {
     bytes32 public constant LIQUIDATOR_ROLE = keccak256("LIQUIDATOR_ROLE");
     bytes32 public constant KEEPER_ROLE = keccak256("KEEPER_ROLE");
     bytes32 public constant ORACLE_ROLE = keccak256("ORACLE_ROLE");
+    PythPriceOracle public priceOracle;
 
     // ============ CONSTANTES ============
     uint256 public constant PRECISION = 1e18;
@@ -53,7 +54,7 @@ contract MexiPerpetuals is ReentrancyGuard, Pausable, AccessControl {
     struct Position {
         uint256 id;
         address trader;
-        string asset;
+        bytes32 asset;
         bool isLong;
         uint256 collateral;
         uint256 size;
@@ -73,7 +74,7 @@ contract MexiPerpetuals is ReentrancyGuard, Pausable, AccessControl {
     }
 
     struct Market {
-        string asset;
+        bytes32 asset;
         address priceFeed;
         uint256 maxOpenInterest;
         uint256 longOpenInterest;
@@ -95,10 +96,10 @@ contract MexiPerpetuals is ReentrancyGuard, Pausable, AccessControl {
 
     mapping(uint256 => Position) public positions;
     mapping(address => uint256[]) public userPositions;
-    mapping(string => Market) public markets;
-    mapping(string => CircuitBreaker) public circuitBreakers;
+    mapping(bytes32 => Market) public markets;
+    mapping(bytes32 => CircuitBreaker) public circuitBreakers;
     
-    string[] public activeMarkets;
+    bytes32[] public activeMarkets;
     uint256 public nextPositionId = 1;
     uint256 public totalCollateral;
     uint256 public insuranceFund;
@@ -117,7 +118,7 @@ contract MexiPerpetuals is ReentrancyGuard, Pausable, AccessControl {
     event PositionOpened(
         uint256 indexed positionId,
         address indexed trader,
-        string asset,
+        bytes32 asset,
         bool isLong,
         uint256 collateral,
         uint256 size,
@@ -139,9 +140,9 @@ contract MexiPerpetuals is ReentrancyGuard, Pausable, AccessControl {
     event CollateralAdded(uint256 indexed positionId, uint256 amount);
     event CollateralRemoved(uint256 indexed positionId, uint256 amount);
     event FundingPaid(uint256 indexed positionId, int256 amount);
-    event MarketAdded(string asset, address priceFeed);
-    event CircuitBreakerTriggered(string asset, uint256 price);
-    event CircuitBreakerReset(string asset);
+    event MarketAdded(bytes32 asset, address priceFeed);
+    event CircuitBreakerTriggered(bytes32 asset, uint256 price);
+    event CircuitBreakerReset(bytes32 asset);
     event FeesDistributed(uint256 toHolders, uint256 toLPs);
 
     // ============ MODIFICADORES ============
