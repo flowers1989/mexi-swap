@@ -57,7 +57,7 @@ contract MexiSwapRouter is ReentrancyGuard, Pausable, Ownable {
     address public immutable WETH;
     address public feeDistributor;
     
-    uint256 public swapFee = 30; // 0.3% por defecto
+    uint256 public swapFee = 20; // 0.2% (Más competitivo que el 0.3% estándar)
     uint256 public protocolFee = 5; // 0.05% al protocolo
     
     mapping(address => bool) public isWhitelistedToken;

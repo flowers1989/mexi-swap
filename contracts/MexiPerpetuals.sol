@@ -42,7 +42,7 @@ contract MexiPerpetuals is ReentrancyGuard, Pausable, AccessControl {
     uint256 public constant MIN_LEVERAGE = 1;
     uint256 public constant MAINTENANCE_MARGIN = 5e16; // 5%
     uint256 public constant LIQUIDATION_FEE = 5e15; // 0.5%
-    uint256 public constant TRADING_FEE = 1e15; // 0.1%
+    uint256 public constant TRADING_FEE = 3e14; // 0.03% (Más competitivo que GMX V2)
     uint256 public constant FUNDING_INTERVAL = 1 hours;
     uint256 public constant MAX_FUNDING_RATE = 1e16; // 1% max funding rate
 
