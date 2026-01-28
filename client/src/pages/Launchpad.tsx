@@ -44,6 +44,7 @@ import {
   ExternalLink
 } from "lucide-react";
 import { useWeb3 } from "@/contexts/Web3Context";
+import { useLaunchpad } from "@/hooks/useLaunchpad";
 import { toast } from "sonner";
 import { getTokenLogo } from "@/config/tokens";
 import { CHAIN_LOGOS } from "@/config/chains";
@@ -257,6 +258,7 @@ const LAUNCHPAD_STATS = {
 
 export default function Launchpad() {
   const { isConnected, connect } = useWeb3();
+  const { projects, loading, buyTokens } = useLaunchpad();
   const [selectedProject, setSelectedProject] = useState<ICOProject | null>(null);
   const [purchaseAmount, setPurchaseAmount] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "upcoming" | "ended">("all");
@@ -277,8 +279,8 @@ export default function Launchpad() {
     chain: "polygon",
   });
 
-  // Filtrar proyectos
-  const filteredProjects = MOCK_PROJECTS.filter(project => {
+  // Filtrar proyectos (ahora desde el contrato)
+  const filteredProjects = (projects.length > 0 ? projects : MOCK_PROJECTS).filter((project: any) => {
     const matchesFilter = filter === "all" || 
       (filter === "active" && (project.phase === "private" || project.phase === "presale" || project.phase === "public")) ||
       (filter === "upcoming" && project.phase === "upcoming") ||
@@ -329,8 +331,14 @@ export default function Launchpad() {
       return;
     }
 
-    const tokensToReceive = amount / selectedProject.tokenPrice;
-    toast.success(`Comprando ${tokensToReceive.toLocaleString()} ${selectedProject.symbol}...`);
+    // Convertir a BigInt para el contrato
+    const amountBigInt = BigInt(Math.floor(amount * 1e18));
+    const success = await buyTokens(selectedProject.id, amountBigInt);
+    
+    if (success) {
+      setPurchaseAmount("");
+      setSelectedProject(null);
+    }
   };
 
   // Crear nuevo launchpad
